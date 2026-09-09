@@ -95,6 +95,49 @@ class DashboardMetrics
     }
 
     /**
+     * @return list<array{start: int, label: string, total: int, segments: array<string, int>}>
+     */
+    public function volumeBuckets(Environment $environment, string $type, TimeRange $range): array
+    {
+        $keys = $this->volumeKeys($type);
+        $events = NightwatchEvent::query()
+            ->forEnvironment($environment)
+            ->ofType($type)
+            ->where('occurred_at', '>=', $range->since())
+            ->get(['occurred_at', 'status_code', 'status', 'handled']);
+
+        $size = $range->bucketSeconds();
+        $end = (int) now()->getTimestamp();
+        $start = (int) $range->since();
+        $firstBucket = intdiv($start, $size) * $size;
+        $buckets = [];
+
+        for ($cursor = $firstBucket; $cursor <= $end; $cursor += $size) {
+            $buckets[$cursor] = [
+                'start' => $cursor,
+                'label' => $range->bucketLabel($cursor),
+                'total' => 0,
+                'segments' => array_fill_keys($keys, 0),
+            ];
+        }
+
+        foreach ($events as $event) {
+            $key = intdiv((int) $event->occurred_at, $size) * $size;
+            if (! isset($buckets[$key])) {
+                continue;
+            }
+
+            $buckets[$key]['total']++;
+            $segment = $this->volumeSegment($event, $type);
+            if ($segment !== null && array_key_exists($segment, $buckets[$key]['segments'])) {
+                $buckets[$key]['segments'][$segment]++;
+            }
+        }
+
+        return array_values($buckets);
+    }
+
+    /**
      * @return Collection<int, NightwatchEvent>
      */
     public function occurrences(Environment $environment, string $type, string $groupHash, TimeRange $range): Collection
@@ -162,7 +205,7 @@ class DashboardMetrics
 
                 return new EventGroup(
                     groupHash: $hash,
-                    label: $latest->title(),
+                    label: $this->groupLabel($type, $latest, $payload),
                     occurrences: $items->count(),
                     avgUs: $durations === [] ? null : array_sum($durations) / count($durations),
                     p95Us: Percentile::nearestRank($durations, 95),
@@ -180,6 +223,14 @@ class DashboardMetrics
                         'connection' => $payload['connection'] ?? null,
                         'sql' => $payload['sql'] ?? null,
                         'name' => $payload['name'] ?? null,
+                        'host' => $payload['host'] ?? null,
+                        'store' => $payload['store'] ?? null,
+                        'key' => $payload['key'] ?? null,
+                        'mailer' => $payload['mailer'] ?? null,
+                        'subject' => $payload['subject'] ?? null,
+                        'channel' => $payload['channel'] ?? null,
+                        'cron' => $payload['cron'] ?? null,
+                        'timezone' => $payload['timezone'] ?? null,
                     ],
                 );
             })
@@ -222,7 +273,54 @@ class DashboardMetrics
             ];
         }
 
+        if ($type === 'outgoing-request') {
+            return [
+                'xx123' => $items->filter(fn (NightwatchEvent $event) => $this->statusFamily($event->status_code) === 'xx123')->count(),
+                'xx4' => $items->filter(fn (NightwatchEvent $event) => $this->statusFamily($event->status_code) === 'xx4')->count(),
+                'xx5' => $items->filter(fn (NightwatchEvent $event) => $this->statusFamily($event->status_code) === 'xx5')->count(),
+            ];
+        }
+
+        if ($type === 'cache-event') {
+            return [
+                'hit' => $items->where('status', 'hit')->count(),
+                'miss' => $items->where('status', 'miss')->count(),
+                'write' => $items->where('status', 'write')->count(),
+                'delete' => $items->where('status', 'delete')->count(),
+                'failures' => $items->filter(fn (NightwatchEvent $event) => in_array($event->status, ['write-failure', 'delete-failure'], true))->count(),
+            ];
+        }
+
+        if (in_array($type, ['mail', 'notification'], true)) {
+            return [
+                'sent' => $items->where('status', 'sent')->count(),
+                'failed' => $items->where('status', 'failed')->count(),
+            ];
+        }
+
+        if ($type === 'scheduled-task') {
+            return [
+                'processed' => $items->where('status', 'processed')->count(),
+                'failed' => $items->where('status', 'failed')->count(),
+                'skipped' => $items->where('status', 'skipped')->count(),
+            ];
+        }
+
         return [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function groupLabel(string $type, NightwatchEvent $latest, array $payload): string
+    {
+        return match ($type) {
+            'outgoing-request' => (string) ($payload['host'] ?? $latest->title()),
+            'cache-event' => (string) ($payload['key'] ?? $latest->title()),
+            'mail' => (string) ($payload['class'] ?? $payload['subject'] ?? $latest->title()),
+            'notification' => (string) ($payload['class'] ?? $latest->title()),
+            default => $latest->title(),
+        };
     }
 
     /**
@@ -343,6 +441,43 @@ class DashboardMetrics
         }
 
         return $spans;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function volumeKeys(string $type): array
+    {
+        return match ($type) {
+            'request', 'outgoing-request' => ['xx123', 'xx4', 'xx5'],
+            'exception' => ['handled', 'unhandled'],
+            'command' => ['succeeded', 'failed'],
+            'job-attempt' => ['processed', 'released', 'failed'],
+            'scheduled-task' => ['processed', 'skipped', 'failed'],
+            'cache-event' => ['hit', 'miss', 'write', 'delete', 'failures'],
+            'mail', 'notification' => ['sent', 'failed'],
+            'query' => ['ok'],
+            default => [],
+        };
+    }
+
+    private function volumeSegment(NightwatchEvent $event, string $type): ?string
+    {
+        return match ($type) {
+            'request', 'outgoing-request' => $this->statusFamily($event->status_code),
+            'exception' => $event->handled === true ? 'handled' : 'unhandled',
+            'command' => (int) ($event->status_code ?? 0) === 0 ? 'succeeded' : 'failed',
+            'job-attempt' => in_array($event->status, ['processed', 'failed', 'released'], true) ? $event->status : null,
+            'scheduled-task' => in_array($event->status, ['processed', 'failed', 'skipped'], true) ? $event->status : null,
+            'cache-event' => match ($event->status) {
+                'hit', 'miss', 'write', 'delete' => $event->status,
+                'write-failure', 'delete-failure' => 'failures',
+                default => null,
+            },
+            'mail', 'notification' => $event->status === 'failed' ? 'failed' : 'sent',
+            'query' => 'ok',
+            default => null,
+        };
     }
 
     private function statusFamily(?int $statusCode): string

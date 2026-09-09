@@ -35,6 +35,16 @@ Route::middleware('auth')->group(function () {
         Route::get('commands/{groupHash}', [DashboardController::class, 'commandGroup'])->name('commands.show');
         Route::get('jobs', [DashboardController::class, 'jobs'])->name('jobs');
         Route::get('jobs/{groupHash}', [DashboardController::class, 'jobGroup'])->name('jobs.show');
+        Route::get('scheduled-tasks', [DashboardController::class, 'scheduledTasks'])->name('scheduled-tasks');
+        Route::get('scheduled-tasks/{groupHash}', [DashboardController::class, 'scheduledTaskGroup'])->name('scheduled-tasks.show');
+        Route::get('outgoing-requests', [DashboardController::class, 'outgoingRequests'])->name('outgoing-requests');
+        Route::get('outgoing-requests/{groupHash}', [DashboardController::class, 'outgoingRequestGroup'])->name('outgoing-requests.show');
+        Route::get('cache', [DashboardController::class, 'cache'])->name('cache');
+        Route::get('cache/{groupHash}', [DashboardController::class, 'cacheGroup'])->name('cache.show');
+        Route::get('mail', [DashboardController::class, 'mail'])->name('mail');
+        Route::get('mail/{groupHash}', [DashboardController::class, 'mailGroup'])->name('mail.show');
+        Route::get('notifications', [DashboardController::class, 'notifications'])->name('notifications');
+        Route::get('notifications/{groupHash}', [DashboardController::class, 'notificationGroup'])->name('notifications.show');
         Route::get('issues', [IssueController::class, 'index'])->name('issues.index');
         Route::get('issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
         Route::get('traces/{traceId}', [DashboardController::class, 'trace'])->name('traces.show');

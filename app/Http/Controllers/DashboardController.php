@@ -88,6 +88,56 @@ class DashboardController extends Controller
         return $this->groupShow($request, $environment, 'command', $groupHash, 'Command');
     }
 
+    public function scheduledTasks(Request $request, Environment $environment): Response
+    {
+        return $this->groupIndex($request, $environment, 'scheduled-task', 'Scheduled tasks');
+    }
+
+    public function scheduledTaskGroup(Request $request, Environment $environment, string $groupHash): Response
+    {
+        return $this->groupShow($request, $environment, 'scheduled-task', $groupHash, 'Scheduled task');
+    }
+
+    public function outgoingRequests(Request $request, Environment $environment): Response
+    {
+        return $this->groupIndex($request, $environment, 'outgoing-request', 'Outgoing requests');
+    }
+
+    public function outgoingRequestGroup(Request $request, Environment $environment, string $groupHash): Response
+    {
+        return $this->groupShow($request, $environment, 'outgoing-request', $groupHash, 'Outgoing request');
+    }
+
+    public function cache(Request $request, Environment $environment): Response
+    {
+        return $this->groupIndex($request, $environment, 'cache-event', 'Cache');
+    }
+
+    public function cacheGroup(Request $request, Environment $environment, string $groupHash): Response
+    {
+        return $this->groupShow($request, $environment, 'cache-event', $groupHash, 'Cache');
+    }
+
+    public function mail(Request $request, Environment $environment): Response
+    {
+        return $this->groupIndex($request, $environment, 'mail', 'Mail');
+    }
+
+    public function mailGroup(Request $request, Environment $environment, string $groupHash): Response
+    {
+        return $this->groupShow($request, $environment, 'mail', $groupHash, 'Mail');
+    }
+
+    public function notifications(Request $request, Environment $environment): Response
+    {
+        return $this->groupIndex($request, $environment, 'notification', 'Notifications');
+    }
+
+    public function notificationGroup(Request $request, Environment $environment, string $groupHash): Response
+    {
+        return $this->groupShow($request, $environment, 'notification', $groupHash, 'Notification');
+    }
+
     public function trace(Environment $environment, string $traceId): Response
     {
         $events = NightwatchEvent::query()
@@ -133,6 +183,7 @@ class DashboardController extends Controller
             'heading' => $heading,
             'kind' => $this->kind($type),
             'groups' => $this->paginate($groups, $request),
+            'buckets' => $this->metrics->volumeBuckets($environment, $type, $range),
         ]);
     }
 
@@ -174,6 +225,7 @@ class DashboardController extends Controller
     {
         return match ($type) {
             'job-attempt' => 'job',
+            'cache-event' => 'cache',
             default => $type,
         };
     }

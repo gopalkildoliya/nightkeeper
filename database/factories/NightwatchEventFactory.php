@@ -178,6 +178,180 @@ class NightwatchEventFactory extends Factory
         ]);
     }
 
+    public function outgoingRequest(string $host = 'api.stripe.com', string $method = 'GET', int $status = 200, int $durationUs = 40_000): static
+    {
+        $group = substr(md5($host), 0, 32);
+        $trace = (string) Str::uuid();
+        $timestamp = (float) now()->getTimestamp();
+        $url = 'https://'.$host.'/v1/charges';
+
+        return $this->state(fn (): array => [
+            't' => 'outgoing-request',
+            'occurred_at' => $timestamp,
+            'trace_id' => $trace,
+            'group_hash' => $group,
+            'server' => 'web-1',
+            'deploy' => 'local',
+            'payload' => [
+                't' => 'outgoing-request',
+                'timestamp' => $timestamp,
+                'host' => $host,
+                'method' => $method,
+                'url' => $url,
+                'duration' => $durationUs,
+                'request_size' => 128,
+                'response_size' => 2048,
+                'status_code' => $status,
+                'trace_id' => $trace,
+                '_group' => $group,
+            ],
+            'created_at' => now(),
+        ]);
+    }
+
+    public function cacheEvent(string $key = 'users.1', string $type = 'hit', string $store = 'redis', int $durationUs = 400): static
+    {
+        $group = substr(md5($store.','.$key), 0, 32);
+        $trace = (string) Str::uuid();
+        $timestamp = (float) now()->getTimestamp();
+
+        return $this->state(fn (): array => [
+            't' => 'cache-event',
+            'occurred_at' => $timestamp,
+            'trace_id' => $trace,
+            'group_hash' => $group,
+            'server' => 'web-1',
+            'deploy' => 'local',
+            'payload' => [
+                't' => 'cache-event',
+                'timestamp' => $timestamp,
+                'store' => $store,
+                'key' => $key,
+                'type' => $type,
+                'duration' => $durationUs,
+                'ttl' => $type === 'write' ? 3600 : 0,
+                'trace_id' => $trace,
+                '_group' => $group,
+            ],
+            'created_at' => now(),
+        ]);
+    }
+
+    public function mail(
+        string $class = 'App\\Mail\\DealSynced',
+        string $subject = 'Deal synced',
+        bool $failed = false,
+        int $durationUs = 12_000,
+    ): static {
+        $group = substr(md5($class), 0, 32);
+        $trace = (string) Str::uuid();
+        $timestamp = (float) now()->getTimestamp();
+
+        return $this->state(fn (): array => [
+            't' => 'mail',
+            'occurred_at' => $timestamp,
+            'trace_id' => $trace,
+            'group_hash' => $group,
+            'server' => 'web-1',
+            'deploy' => 'local',
+            'payload' => [
+                't' => 'mail',
+                'timestamp' => $timestamp,
+                'mailer' => 'smtp',
+                'class' => $class,
+                'subject' => $subject,
+                'to' => 1,
+                'cc' => 0,
+                'bcc' => 0,
+                'attachments' => 0,
+                'duration' => $durationUs,
+                'failed' => $failed,
+                'trace_id' => $trace,
+                '_group' => $group,
+            ],
+            'created_at' => now(),
+        ]);
+    }
+
+    public function notification(
+        string $class = 'App\\Notifications\\DealSynced',
+        string $channel = 'mail',
+        bool $failed = false,
+        int $durationUs = 8_000,
+    ): static {
+        $group = substr(md5($class), 0, 32);
+        $trace = (string) Str::uuid();
+        $timestamp = (float) now()->getTimestamp();
+
+        return $this->state(fn (): array => [
+            't' => 'notification',
+            'occurred_at' => $timestamp,
+            'trace_id' => $trace,
+            'group_hash' => $group,
+            'server' => 'web-1',
+            'deploy' => 'local',
+            'payload' => [
+                't' => 'notification',
+                'timestamp' => $timestamp,
+                'channel' => $channel,
+                'class' => $class,
+                'duration' => $durationUs,
+                'failed' => $failed,
+                'trace_id' => $trace,
+                '_group' => $group,
+            ],
+            'created_at' => now(),
+        ]);
+    }
+
+    public function scheduledTask(
+        string $name = 'inspire',
+        string $status = 'processed',
+        int $durationUs = 25_000,
+        string $cron = '* * * * *',
+    ): static {
+        $group = substr(md5($name.','.$cron.',UTC'), 0, 32);
+        $trace = (string) Str::uuid();
+        $timestamp = (float) now()->getTimestamp();
+
+        return $this->state(fn (): array => [
+            't' => 'scheduled-task',
+            'occurred_at' => $timestamp,
+            'trace_id' => $trace,
+            'group_hash' => $group,
+            'server' => 'web-1',
+            'deploy' => 'local',
+            'payload' => [
+                't' => 'scheduled-task',
+                'timestamp' => $timestamp,
+                'name' => $name,
+                'cron' => $cron,
+                'timezone' => 'UTC',
+                'repeat_seconds' => 0,
+                'status' => $status,
+                'duration' => $durationUs,
+                'exceptions' => $status === 'failed' ? 1 : 0,
+                'logs' => 0,
+                'queries' => 2,
+                'lazy_loads' => 0,
+                'jobs_queued' => 0,
+                'mail' => 0,
+                'notifications' => 0,
+                'outgoing_requests' => 0,
+                'files_read' => 0,
+                'files_written' => 0,
+                'cache_events' => 0,
+                'hydrated_models' => 0,
+                'peak_memory_usage' => 16_777_216,
+                'exception_preview' => '',
+                'context' => '',
+                'trace_id' => $trace,
+                '_group' => $group,
+            ],
+            'created_at' => now(),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */

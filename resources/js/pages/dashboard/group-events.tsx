@@ -26,6 +26,18 @@ export default function GroupEvents({
                             {'succeeded' in group.counts
                                 ? ` · ${group.counts.succeeded.toLocaleString()} succeeded · ${(group.counts.failed ?? 0).toLocaleString()} failed`
                                 : ''}
+                            {'processed' in group.counts
+                                ? ` · ${(group.counts.processed ?? 0).toLocaleString()} processed · ${(group.counts.failed ?? 0).toLocaleString()} failed`
+                                : ''}
+                            {'sent' in group.counts
+                                ? ` · ${(group.counts.sent ?? 0).toLocaleString()} sent · ${(group.counts.failed ?? 0).toLocaleString()} failed`
+                                : ''}
+                            {'hit' in group.counts
+                                ? ` · ${(group.counts.hit ?? 0).toLocaleString()} hits · ${(group.counts.miss ?? 0).toLocaleString()} misses`
+                                : ''}
+                            {'xx123' in group.counts
+                                ? ` · ${(group.counts.xx123 ?? 0).toLocaleString()} 2xx · ${(group.counts.xx4 ?? 0).toLocaleString()} 4xx · ${(group.counts.xx5 ?? 0).toLocaleString()} 5xx`
+                                : ''}
                         </p>
                         {group.meta.class ? (
                             <p className="font-mono text-xs">{group.meta.class}</p>

@@ -25,6 +25,14 @@ export type EventGroup = {
         connection?: string | null;
         sql?: string | null;
         name?: string | null;
+        host?: string | null;
+        store?: string | null;
+        key?: string | null;
+        mailer?: string | null;
+        subject?: string | null;
+        channel?: string | null;
+        cron?: string | null;
+        timezone?: string | null;
     };
 };
 
@@ -43,6 +51,7 @@ export type DashboardEvent = {
     queries?: number | null;
     exceptions?: number | null;
     peak_memory_label?: string;
+    cron?: string | null;
     payload?: Record<string, unknown>;
 };
 
@@ -80,6 +89,13 @@ export type RequestBucket = {
     xx4: number;
     xx5: number;
     avg_us: number | null;
+};
+
+export type VolumeBucket = {
+    start: number;
+    label: string;
+    total: number;
+    segments: Record<string, number>;
 };
 
 export type TraceSpan = {

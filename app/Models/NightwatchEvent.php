@@ -98,6 +98,8 @@ class NightwatchEvent extends Model
             'outgoing-request' => trim(($payload['method'] ?? '').' '.($payload['url'] ?? $payload['host'] ?? '')),
             'log' => trim(($payload['level'] ?? 'log').' '.($payload['message'] ?? '')),
             'cache-event' => trim(($payload['type'] ?? 'cache').' '.($payload['key'] ?? '')),
+            'mail' => (string) ($payload['class'] ?? $payload['subject'] ?? 'mail'),
+            'notification' => (string) ($payload['class'] ?? 'notification'),
             default => (string) ($this->t ?? 'event'),
         };
     }
@@ -106,8 +108,16 @@ class NightwatchEvent extends Model
     {
         $payload = $this->payload ?? [];
 
-        if ($this->t === 'request') {
+        if (in_array($this->t, ['request', 'outgoing-request'], true)) {
             return (string) ($this->status_code ?? $payload['status_code'] ?? '');
+        }
+
+        if ($this->t === 'cache-event') {
+            return (string) ($this->status ?? $payload['type'] ?? '');
+        }
+
+        if (in_array($this->t, ['mail', 'notification'], true)) {
+            return ($payload['failed'] ?? false) === true || $this->status === 'failed' ? 'failed' : 'sent';
         }
 
         if ($this->status) {
@@ -164,6 +174,7 @@ class NightwatchEvent extends Model
 
         return $this->t === 'exception'
             || ($this->status ?? $payload['status'] ?? null) === 'failed'
+            || in_array($this->status ?? $payload['type'] ?? null, ['write-failure', 'delete-failure'], true)
             || ($payload['failed'] ?? false) === true
             || (is_numeric($code) && (int) $code >= 500)
             || ($this->t === 'command' && $exit !== null && $exit !== 0);
@@ -187,12 +198,13 @@ class NightwatchEvent extends Model
             'server' => $this->server,
         ];
 
-        if ($this->t === 'command') {
+        if (in_array($this->t, ['command', 'scheduled-task'], true)) {
             $data['class'] = is_string($payload['class'] ?? null) ? $payload['class'] : null;
             $data['command_line'] = filled($payload['command'] ?? null) ? (string) $payload['command'] : null;
             $data['queries'] = is_numeric($payload['queries'] ?? null) ? (int) $payload['queries'] : null;
             $data['exceptions'] = is_numeric($payload['exceptions'] ?? null) ? (int) $payload['exceptions'] : null;
             $data['peak_memory_label'] = $this->peakMemoryLabel();
+            $data['cron'] = is_string($payload['cron'] ?? null) ? $payload['cron'] : null;
         }
 
         if ($includePayload) {

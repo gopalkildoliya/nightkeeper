@@ -14,7 +14,9 @@ import { ExternalLink } from 'lucide-react';
 
 export function EventTable({ events }: { events: DashboardEvent[] }) {
     const environmentId = usePage().props.currentEnvironment?.id;
-    const isCommandList = events.some((event) => event.t === 'command');
+    const isCommandLike = events.some((event) =>
+        ['command', 'scheduled-task'].includes(event.t),
+    );
 
     if (events.length === 0) {
         return (
@@ -31,7 +33,7 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
                 <Th>Summary & Trace Endpoint</Th>
                 <Th>Status</Th>
                 <Th>Duration</Th>
-                {isCommandList ? (
+                {isCommandLike ? (
                     <>
                         <Th>Queries</Th>
                         <Th>Memory</Th>
@@ -71,6 +73,11 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
                                             <span className="text-foreground">{path || 'command'}</span>
                                         )}
                                     </div>
+                                    {event.cron ? (
+                                        <div className="text-muted-foreground max-w-xl truncate text-xs">
+                                            {event.cron}
+                                        </div>
+                                    ) : null}
                                     {event.command_line && event.command_line !== event.title ? (
                                         <div className="text-muted-foreground max-w-xl truncate text-xs">
                                             {event.command_line}
@@ -96,7 +103,7 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
                                 </span>
                             </Td>
                             <Td className="font-mono text-amber-600 dark:text-amber-400 font-semibold">{event.duration_label}</Td>
-                            {isCommandList ? (
+                            {isCommandLike ? (
                                 <>
                                     <Td className="font-mono">
                                         {(event.queries ?? 0).toLocaleString()}

@@ -19,6 +19,9 @@ const barClass: Record<string, string> = {
     'child-exception': 'bg-red-600 dark:bg-red-600/80 border border-red-400/40 text-white',
     'child-cache-event': 'bg-emerald-600 dark:bg-emerald-600/80 border border-emerald-400/40 text-white',
     'child-outgoing-request': 'bg-sky-600 dark:bg-sky-600/80 border border-sky-400/40 text-white',
+    'child-mail': 'bg-rose-600 dark:bg-rose-600/80 border border-rose-400/40 text-white',
+    'child-notification': 'bg-pink-600 dark:bg-pink-600/80 border border-pink-400/40 text-white',
+    'child-scheduled-task': 'bg-indigo-600 dark:bg-indigo-600/80 border border-indigo-400/40 text-white',
 };
 
 export default function Trace({

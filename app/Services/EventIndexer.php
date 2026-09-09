@@ -30,7 +30,7 @@ class EventIndexer
             'status_code' => is_numeric($statusCode) ? (int) $statusCode : null,
             'handled' => array_key_exists('handled', $record) ? (bool) $record['handled'] : null,
             'user_id' => is_string($user) && $user !== '' ? substr($user, 0, 255) : null,
-            'status' => isset($record['status']) && is_string($record['status']) ? substr($record['status'], 0, 32) : null,
+            'status' => $this->status($record),
             'label' => $this->label($record),
         ];
     }
@@ -52,6 +52,8 @@ class EventIndexer
             'outgoing-request' => trim(($record['method'] ?? '').' '.($record['url'] ?? $record['host'] ?? '')),
             'log' => trim(($record['level'] ?? 'log').' '.($record['message'] ?? '')),
             'cache-event' => trim(($record['type'] ?? 'cache').' '.($record['key'] ?? '')),
+            'mail' => (string) ($record['class'] ?? $record['subject'] ?? 'mail'),
+            'notification' => (string) ($record['class'] ?? 'notification'),
             default => is_string($type) ? $type : null,
         };
 
@@ -60,6 +62,28 @@ class EventIndexer
         }
 
         return substr($label, 0, 255);
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     */
+    private function status(array $record): ?string
+    {
+        if (isset($record['status']) && is_string($record['status'])) {
+            return substr($record['status'], 0, 32);
+        }
+
+        $type = $record['t'] ?? null;
+
+        if ($type === 'cache-event' && is_string($record['type'] ?? null)) {
+            return substr($record['type'], 0, 32);
+        }
+
+        if (in_array($type, ['mail', 'notification'], true)) {
+            return ($record['failed'] ?? false) === true ? 'failed' : 'sent';
+        }
+
+        return null;
     }
 
     /**

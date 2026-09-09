@@ -1,10 +1,15 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Bell,
     Bug,
+    CalendarClock,
     Database,
+    Globe,
+    HardDrive,
     LayoutGrid,
     ListTodo,
+    Mail,
     Settings,
     Terminal,
     Workflow,
@@ -89,6 +94,46 @@ export function AppSidebar() {
                       rangeValue,
                   ),
                   icon: ListTodo,
+              },
+              {
+                  title: 'Scheduled',
+                  href: withRange(
+                      environmentPath(environmentId, '/scheduled-tasks'),
+                      rangeValue,
+                  ),
+                  icon: CalendarClock,
+              },
+              {
+                  title: 'Outgoing',
+                  href: withRange(
+                      environmentPath(environmentId, '/outgoing-requests'),
+                      rangeValue,
+                  ),
+                  icon: Globe,
+              },
+              {
+                  title: 'Cache',
+                  href: withRange(
+                      environmentPath(environmentId, '/cache'),
+                      rangeValue,
+                  ),
+                  icon: HardDrive,
+              },
+              {
+                  title: 'Mail',
+                  href: withRange(
+                      environmentPath(environmentId, '/mail'),
+                      rangeValue,
+                  ),
+                  icon: Mail,
+              },
+              {
+                  title: 'Notifications',
+                  href: withRange(
+                      environmentPath(environmentId, '/notifications'),
+                      rangeValue,
+                  ),
+                  icon: Bell,
               },
               {
                   title: 'Environment',

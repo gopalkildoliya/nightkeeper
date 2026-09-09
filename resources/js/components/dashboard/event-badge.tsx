@@ -12,6 +12,8 @@ const typeStyles: Record<string, string> = {
     'cache-event': 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold',
     bootstrap: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold',
     'outgoing-request': 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400 font-semibold',
+    mail: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 font-semibold',
+    notification: 'border-pink-500/30 bg-pink-500/10 text-pink-700 dark:text-pink-400 font-semibold',
     before_middleware: 'border-border bg-muted text-muted-foreground',
     after_middleware: 'border-border bg-muted text-muted-foreground',
 };
