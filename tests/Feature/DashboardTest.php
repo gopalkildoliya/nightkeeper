@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Environment;
 use App\Models\NightwatchEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -235,6 +236,16 @@ class DashboardTest extends TestCase
             );
     }
 
+    public function test_chart_ticks_use_one_minute_fifteen_minutes_and_two_hours_for_each_range(): void
+    {
+        $this->travelTo('2026-09-09 12:00:00');
+        [, $environment] = $this->actingAsOwner();
+
+        $this->assertConsecutiveBucketSeconds($environment, '1h', 60);
+        $this->assertConsecutiveBucketSeconds($environment, '24h', 900);
+        $this->assertConsecutiveBucketSeconds($environment, '7d', 7200);
+    }
+
     public function test_scheduled_task_group_lists_runs_with_cron_status_and_server(): void
     {
         $this->travelTo(now());
@@ -288,5 +299,19 @@ class DashboardTest extends TestCase
     private function segmentSum(Collection $buckets, string $segment): int
     {
         return (int) $buckets->sum(fn (mixed $bucket): int => (int) data_get($bucket, 'segments.'.$segment));
+    }
+
+    private function assertConsecutiveBucketSeconds(Environment $environment, string $range, int $seconds): void
+    {
+        $this->get(route('requests', $environment).'?range='.$range)
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('buckets', function (Collection $buckets) use ($seconds): bool {
+                    $starts = $buckets->pluck('start')->values();
+
+                    return $starts->count() > 1
+                        && ((int) $starts->get(1) - (int) $starts->get(0)) === $seconds
+                        && ((int) $starts->last() - (int) $starts->get($starts->count() - 2)) === $seconds;
+                })
+            );
     }
 }

@@ -27,13 +27,3 @@ NIGHTWATCH_TOKEN=dev-nightwatch-token
 php artisan test
 ```
 
-## Cloudflare Worker (`worker/`)
-
-Earlier ingest lake (gzip → R2 + D1). Run from `worker/`:
-
-```bash
-npm install
-npm run dev
-```
-
-That serves on port 8787. Use either the Worker **or** Laravel as `NIGHTWATCH_BASE_URL`, not both.

@@ -50,9 +50,9 @@ enum TimeRange: string
     public function bucketSeconds(): int
     {
         return match ($this) {
-            self::OneHour => 300,
-            self::TwentyFourHours => 3600,
-            self::SevenDays => 86400,
+            self::OneHour => 60,
+            self::TwentyFourHours => 900,
+            self::SevenDays => 7200,
         };
     }
 
@@ -61,7 +61,7 @@ enum TimeRange: string
         return match ($this) {
             self::OneHour => gmdate('H:i', $start),
             self::TwentyFourHours => gmdate('H:i', $start),
-            self::SevenDays => gmdate('M j', $start),
+            self::SevenDays => gmdate('M j H:i', $start),
         };
     }
 }

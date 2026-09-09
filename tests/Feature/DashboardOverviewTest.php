@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\NightwatchEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -67,5 +68,61 @@ class DashboardOverviewTest extends TestCase
                 ->has('slow_routes', 1)
                 ->where('slow_routes.0.label', 'GET /recent')
             );
+    }
+
+    public function test_overview_charts_jobs_exceptions_queries_and_activity_counts(): void
+    {
+        $this->travelTo(now());
+        [, $environment] = $this->actingAsOwner();
+
+        NightwatchEvent::factory()->recycle($environment)->jobAttempt('App\\Jobs\\SyncDeals', 'processed')->create([
+            'occurred_at' => now()->getTimestamp() - 60,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->jobAttempt('App\\Jobs\\SyncDeals', 'failed')->create([
+            'occurred_at' => now()->getTimestamp() - 90,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->exception()->create([
+            'occurred_at' => now()->getTimestamp() - 30,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->handled()->create([
+            'occurred_at' => now()->getTimestamp() - 30,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->query()->create([
+            'occurred_at' => now()->getTimestamp() - 20,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->command()->create([
+            'occurred_at' => now()->getTimestamp() - 15,
+        ]);
+        NightwatchEvent::factory()->recycle($environment)->command()->create([
+            'occurred_at' => now()->subHours(3)->getTimestamp(),
+        ]);
+
+        $this->get(route('dashboard', $environment).'?range=1h')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard/overview')
+                ->where('job_buckets', function (Collection $buckets): bool {
+                    return $buckets->sum('total') === 2
+                        && $this->segmentSum($buckets, 'processed') === 1
+                        && $this->segmentSum($buckets, 'failed') === 1;
+                })
+                ->where('exception_buckets', function (Collection $buckets): bool {
+                    return $buckets->sum('total') === 2
+                        && $this->segmentSum($buckets, 'handled') === 1
+                        && $this->segmentSum($buckets, 'unhandled') === 1;
+                })
+                ->where('query_buckets', function (Collection $buckets): bool {
+                    return $buckets->sum('total') === 1;
+                })
+                ->where('activity.commands', 1)
+                ->where('activity.mail', 0)
+            );
+    }
+
+    /**
+     * @param  Collection<int, mixed>  $buckets
+     */
+    private function segmentSum(Collection $buckets, string $segment): int
+    {
+        return (int) $buckets->sum(fn (mixed $bucket): int => (int) data_get($bucket, 'segments.'.$segment));
     }
 }

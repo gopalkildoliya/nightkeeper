@@ -22,7 +22,11 @@ class DashboardMetrics
      *     slow_routes: Collection<int, EventGroup>,
      *     slow_route_threshold_label: string,
      *     exceptions: array{total: int, handled: int, unhandled: int, users: int},
-     *     jobs: array{attempts: int, min_us: int|null, max_us: int|null, min_label: string, max_label: string}
+     *     jobs: array{attempts: int, min_us: int|null, max_us: int|null, min_label: string, max_label: string},
+     *     job_buckets: list<array{start: int, label: string, total: int, segments: array<string, int>}>,
+     *     exception_buckets: list<array{start: int, label: string, total: int, segments: array<string, int>}>,
+     *     query_buckets: list<array{start: int, label: string, total: int, segments: array<string, int>}>,
+     *     activity: array{commands: int, scheduled_tasks: int, outgoing_requests: int, cache: int, mail: int, notifications: int}
      * }
      */
     public function overview(Environment $environment, TimeRange $range): array
@@ -39,6 +43,7 @@ class DashboardMetrics
         $avg = $durations === [] ? null : array_sum($durations) / count($durations);
         $p95 = Percentile::nearestRank($durations, 95);
         $jobs = $this->jobSnapshot($environment, $range);
+        $counts = $this->typeCounts($environment, $range);
 
         return [
             'range' => $range->toArray(),
@@ -69,6 +74,17 @@ class DashboardMetrics
                 ...$jobs,
                 'min_label' => Duration::label($jobs['min_us']),
                 'max_label' => Duration::label($jobs['max_us']),
+            ],
+            'job_buckets' => $this->volumeBuckets($environment, 'job-attempt', $range),
+            'exception_buckets' => $this->volumeBuckets($environment, 'exception', $range),
+            'query_buckets' => $this->volumeBuckets($environment, 'query', $range),
+            'activity' => [
+                'commands' => (int) $counts->get('command', 0),
+                'scheduled_tasks' => (int) $counts->get('scheduled-task', 0),
+                'outgoing_requests' => (int) $counts->get('outgoing-request', 0),
+                'cache' => (int) $counts->get('cache-event', 0),
+                'mail' => (int) $counts->get('mail', 0),
+                'notifications' => (int) $counts->get('notification', 0),
             ],
         ];
     }
@@ -388,6 +404,19 @@ class DashboardMetrics
             'unhandled' => $total - $handled,
             'users' => (int) (clone $query)->whereNotNull('user_id')->selectRaw('count(distinct user_id) as aggregate')->value('aggregate'),
         ];
+    }
+
+    /**
+     * @return Collection<string, int>
+     */
+    private function typeCounts(Environment $environment, TimeRange $range): Collection
+    {
+        return NightwatchEvent::query()
+            ->forEnvironment($environment)
+            ->where('occurred_at', '>=', $range->since())
+            ->selectRaw('t, count(*) as total')
+            ->groupBy('t')
+            ->pluck('total', 't');
     }
 
     /**

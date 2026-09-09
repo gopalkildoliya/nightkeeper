@@ -10,6 +10,7 @@ import {
     Terminal,
     Workflow,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import {
     Card,
     CardContent,
@@ -18,6 +19,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import type { VolumeBucket } from '@/types/dashboard';
+import { StackedBarChart } from '@/components/dashboard/stacked-bar-chart';
 import { cn } from '@/lib/utils';
 
 type Kind =
@@ -43,6 +45,7 @@ type Segment = {
 type ChartConfig = {
     title: string;
     unit: string;
+    noun: string;
     ariaLabel: string;
     accentClass: string;
     iconClass: string;
@@ -54,6 +57,7 @@ const charts: Record<Kind, ChartConfig> = {
     request: {
         title: 'Requests',
         unit: 'in this range',
+        noun: 'requests',
         ariaLabel: 'Request volume',
         accentClass: 'border-t-blue-500',
         iconClass: 'text-blue-500',
@@ -67,6 +71,7 @@ const charts: Record<Kind, ChartConfig> = {
     query: {
         title: 'Queries',
         unit: 'in this range',
+        noun: 'queries',
         ariaLabel: 'Query volume',
         accentClass: 'border-t-amber-500',
         iconClass: 'text-amber-500',
@@ -78,6 +83,7 @@ const charts: Record<Kind, ChartConfig> = {
     job: {
         title: 'Job attempts',
         unit: 'in this range',
+        noun: 'attempts',
         ariaLabel: 'Job attempt volume',
         accentClass: 'border-t-violet-500',
         iconClass: 'text-violet-500',
@@ -91,6 +97,7 @@ const charts: Record<Kind, ChartConfig> = {
     exception: {
         title: 'Exceptions',
         unit: 'in this range',
+        noun: 'exceptions',
         ariaLabel: 'Exception volume',
         accentClass: 'border-t-red-500',
         iconClass: 'text-red-500',
@@ -103,6 +110,7 @@ const charts: Record<Kind, ChartConfig> = {
     command: {
         title: 'Command runs',
         unit: 'in this range',
+        noun: 'runs',
         ariaLabel: 'Command volume',
         accentClass: 'border-t-purple-500',
         iconClass: 'text-purple-500',
@@ -115,6 +123,7 @@ const charts: Record<Kind, ChartConfig> = {
     'scheduled-task': {
         title: 'Scheduled runs',
         unit: 'in this range',
+        noun: 'runs',
         ariaLabel: 'Scheduled task volume',
         accentClass: 'border-t-indigo-500',
         iconClass: 'text-indigo-500',
@@ -128,6 +137,7 @@ const charts: Record<Kind, ChartConfig> = {
     'outgoing-request': {
         title: 'Outgoing requests',
         unit: 'in this range',
+        noun: 'calls',
         ariaLabel: 'Outgoing request volume',
         accentClass: 'border-t-sky-500',
         iconClass: 'text-sky-500',
@@ -141,6 +151,7 @@ const charts: Record<Kind, ChartConfig> = {
     cache: {
         title: 'Cache events',
         unit: 'in this range',
+        noun: 'events',
         ariaLabel: 'Cache event volume',
         accentClass: 'border-t-emerald-500',
         iconClass: 'text-emerald-500',
@@ -156,6 +167,7 @@ const charts: Record<Kind, ChartConfig> = {
     mail: {
         title: 'Mail',
         unit: 'in this range',
+        noun: 'messages',
         ariaLabel: 'Mail volume',
         accentClass: 'border-t-rose-500',
         iconClass: 'text-rose-500',
@@ -168,6 +180,7 @@ const charts: Record<Kind, ChartConfig> = {
     notification: {
         title: 'Notifications',
         unit: 'in this range',
+        noun: 'notifications',
         ariaLabel: 'Notification volume',
         accentClass: 'border-t-pink-500',
         iconClass: 'text-pink-500',
@@ -182,13 +195,14 @@ const charts: Record<Kind, ChartConfig> = {
 export function PanelVolumeChart({
     kind,
     buckets,
+    footer,
 }: {
     kind: Kind;
     buckets: VolumeBucket[];
+    footer?: ReactNode;
 }) {
     const config = charts[kind];
     const Icon = config.icon;
-    const maxTotal = Math.max(1, ...buckets.map((bucket) => bucket.total));
     const total = buckets.reduce((sum, bucket) => sum + bucket.total, 0);
     const segmentTotals = Object.fromEntries(
         config.segments.map((segment) => [
@@ -221,7 +235,7 @@ export function PanelVolumeChart({
                     </span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3 pt-4">
+            <CardContent className="flex flex-col gap-3 overflow-visible pt-4">
                 <div className="flex flex-wrap items-center gap-4 font-mono text-xs">
                     {config.segments.map((segment) => (
                         <span
@@ -245,49 +259,18 @@ export function PanelVolumeChart({
                         </span>
                     ))}
                 </div>
-                <div
-                    className="flex h-32 items-end gap-1 pt-3"
-                    aria-label={config.ariaLabel}
-                >
-                    {buckets.map((bucket) => {
-                        const height = (bucket.total / maxTotal) * 100;
-                        const tooltipParts = config.segments
-                            .map(
-                                (segment) =>
-                                    `${bucket.segments[segment.key] ?? 0} ${segment.label.toLowerCase()}`,
-                            )
-                            .join(', ');
-
-                        return (
-                            <div
-                                key={bucket.start}
-                                className="group relative flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-end"
-                                title={`${bucket.label}: ${bucket.total.toLocaleString()} (${tooltipParts})`}
-                            >
-                                <div
-                                    className="flex w-full flex-col-reverse overflow-hidden rounded-t shadow-xs transition-all group-hover:brightness-110"
-                                    style={{
-                                        height: `${Math.max(4, height)}%`,
-                                    }}
-                                >
-                                    {bucket.total > 0 ? (
-                                        config.segments.map((segment) => (
-                                            <i
-                                                key={segment.key}
-                                                className={cn('block w-full', segment.barClass)}
-                                                style={{
-                                                    height: `${((bucket.segments[segment.key] ?? 0) / bucket.total) * 100}%`,
-                                                }}
-                                            />
-                                        ))
-                                    ) : (
-                                        <i className="block h-full w-full bg-muted" />
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                <StackedBarChart
+                    ariaLabel={config.ariaLabel}
+                    points={buckets.map((bucket) => ({
+                        start: bucket.start,
+                        label: bucket.label,
+                        total: bucket.total,
+                        values: bucket.segments,
+                    }))}
+                    segments={config.segments}
+                    totalNoun={config.noun}
+                />
+                {footer}
             </CardContent>
         </Card>
     );
