@@ -82,4 +82,17 @@ class OrganizationController extends Controller
             ])->values()->all(),
         ]);
     }
+
+    public function update(Request $request, Organization $organization): RedirectResponse
+    {
+        abort_unless($request->user()?->can('update', $organization), 404);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $organization->update($validated);
+
+        return back()->with('success', 'Organisation updated.');
+    }
 }

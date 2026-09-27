@@ -214,6 +214,65 @@ class NightwatchEvent extends Model
         return $data;
     }
 
+    /**
+     * @return array{
+     *     code: string|null,
+     *     php_version: string|null,
+     *     laravel_version: string|null,
+     *     execution_source: string|null,
+     *     user: string|null,
+     *     server: string|null,
+     *     deploy: string|null,
+     *     trace_id: string|null,
+     *     occurred_at_label: string,
+     *     frames: list<array{file: string|null, source: string|null, code: array<string, string>|null}>,
+     * }|null
+     */
+    public function exceptionDetail(): ?array
+    {
+        if ($this->t !== 'exception') {
+            return null;
+        }
+
+        $payload = $this->payload ?? [];
+
+        return [
+            'code' => isset($payload['code']) && is_scalar($payload['code']) ? (string) $payload['code'] : null,
+            'php_version' => is_string($payload['php_version'] ?? null) ? $payload['php_version'] : null,
+            'laravel_version' => is_string($payload['laravel_version'] ?? null) ? $payload['laravel_version'] : null,
+            'execution_source' => is_string($payload['execution_source'] ?? null) ? $payload['execution_source'] : null,
+            'user' => $this->user_id,
+            'server' => $this->server,
+            'deploy' => $this->deploy,
+            'trace_id' => $this->trace_id,
+            'occurred_at_label' => $this->occurredAtLabel(),
+            'frames' => $this->exceptionFrames($payload),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return list<array{file: string|null, source: string|null, code: array<string, string>|null}>
+     */
+    private function exceptionFrames(array $payload): array
+    {
+        $trace = $payload['trace'] ?? null;
+
+        if (is_string($trace)) {
+            $trace = json_decode($trace, true);
+        }
+
+        if (! is_array($trace)) {
+            return [];
+        }
+
+        return array_values(array_map(fn (array $frame): array => [
+            'file' => is_string($frame['file'] ?? null) ? $frame['file'] : null,
+            'source' => is_string($frame['source'] ?? null) ? $frame['source'] : null,
+            'code' => is_array($frame['code'] ?? null) ? $frame['code'] : null,
+        ], array_filter($trace, 'is_array')));
+    }
+
     public function commandExitCode(): ?int
     {
         if ($this->t === 'command' && $this->status_code !== null) {

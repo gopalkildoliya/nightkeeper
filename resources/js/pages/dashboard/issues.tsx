@@ -9,7 +9,7 @@ import {
     Th,
 } from '@/components/dashboard/data-table';
 import { Pager } from '@/components/dashboard/pager';
-import { environmentPath, withRange } from '@/lib/range';
+import { environmentPath } from '@/lib/range';
 import type { DashboardIssue, Paginated } from '@/types/dashboard';
 import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, Users, Clock } from 'lucide-react';
@@ -19,7 +19,7 @@ type IssuesProps = {
 };
 
 export default function Issues({ issues }: IssuesProps) {
-    const { range, currentEnvironment } = usePage().props;
+    const { currentEnvironment } = usePage().props;
     const environmentId = currentEnvironment?.id;
 
     return (
@@ -39,7 +39,7 @@ export default function Issues({ issues }: IssuesProps) {
 
                 {issues.data.length === 0 ? (
                     <EmptyState>
-                        No open exception issues recorded in this time range.
+                        No exception issues recorded.
                     </EmptyState>
                 ) : (
                     <div className="space-y-4">
@@ -58,15 +58,14 @@ export default function Issues({ issues }: IssuesProps) {
                                                 <EventBadge type="exception" />
                                                 <div className="min-w-0 space-y-1">
                                                     <MonoLink
-                                                        href={withRange(
+                                                        href={
                                                             environmentId
                                                                 ? environmentPath(
                                                                       environmentId,
                                                                       `/issues/${issue.id}`,
                                                                   )
-                                                                : `/issues/${issue.id}`,
-                                                            range.value,
-                                                        )}
+                                                                : `/issues/${issue.id}`
+                                                        }
                                                         className="text-red-600 dark:text-red-400 hover:underline font-bold text-sm"
                                                     >
                                                         {issue.class}

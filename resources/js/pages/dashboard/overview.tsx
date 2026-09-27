@@ -214,18 +214,12 @@ export default function Overview({
             <Head title="Overview" />
             <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
                 
-                {/* Header title & live status */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                            Overview Dashboard
-                        </h1>
-                        <p className="text-xs text-muted-foreground mt-1">Application performance telemetry for {range.label}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full font-medium">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        LIVE STREAMING
-                    </div>
+                {/* Header title */}
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                        Overview Dashboard
+                    </h1>
+                    <p className="text-xs text-muted-foreground mt-1">Application performance telemetry for {range.label}</p>
                 </div>
 
                 {/* Top Metrics Cards */}

@@ -12,7 +12,9 @@ export function AppSidebarHeader({
     const { currentEnvironment } = usePage().props;
     const pathname = new URL(usePage().url, 'http://localhost').pathname;
     const showRange =
-        Boolean(currentEnvironment) && !pathname.endsWith('/settings');
+        Boolean(currentEnvironment) &&
+        !pathname.endsWith('/settings') &&
+        !pathname.includes('/issues');
 
     return (
         <header className="border-sidebar-border/50 flex h-16 shrink-0 items-center gap-2 border-b px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">

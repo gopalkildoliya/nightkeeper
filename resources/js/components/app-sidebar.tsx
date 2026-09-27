@@ -139,6 +139,7 @@ export function AppSidebar() {
                   title: 'Environment',
                   href: environmentPath(environmentId, '/settings'),
                   icon: Settings,
+                  hasSeparator: true,
               },
           ]
         : [

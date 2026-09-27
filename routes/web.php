@@ -16,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::get('organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::get('organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+    Route::patch('organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
     Route::post('organizations/{organization}/members', [OrganizationMemberController::class, 'store'])->name('organizations.members.store');
     Route::delete('organizations/{organization}/members/{user}', [OrganizationMemberController::class, 'destroy'])->name('organizations.members.destroy');
     Route::post('organizations/{organization}/applications', [ApplicationController::class, 'store'])->name('applications.store');
@@ -47,6 +48,8 @@ Route::middleware('auth')->group(function () {
         Route::get('notifications/{groupHash}', [DashboardController::class, 'notificationGroup'])->name('notifications.show');
         Route::get('issues', [IssueController::class, 'index'])->name('issues.index');
         Route::get('issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
+        Route::post('issues/{issue}/close', [IssueController::class, 'close'])->name('issues.close');
+        Route::post('issues/{issue}/reopen', [IssueController::class, 'reopen'])->name('issues.reopen');
         Route::get('traces/{traceId}', [DashboardController::class, 'trace'])->name('traces.show');
         Route::get('settings', [EnvironmentController::class, 'show'])->name('environments.settings');
         Route::patch('/', [EnvironmentController::class, 'update'])->name('environments.update');

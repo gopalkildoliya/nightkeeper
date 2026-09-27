@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Application;
 use App\Models\Environment;
 use App\Models\Issue;
+use App\Models\Organization;
+use App\Models\User;
 use App\TimeRange;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -44,21 +47,7 @@ class HandleInertiaRequests extends Middleware
         $current = $environment instanceof Environment ? $environment : null;
         $current?->loadMissing('application.organization');
 
-        $switcher = [];
-        if ($user !== null) {
-            $switcher = $user->accessibleEnvironments()
-                ->with('application.organization')
-                ->orderBy('name')
-                ->get()
-                ->map(fn (Environment $item) => [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'application' => $item->application->name,
-                    'organization' => $item->application->organization->name,
-                ])
-                ->values()
-                ->all();
-        }
+        $switcher = $user === null ? [] : $this->switcher($user);
 
         return [
             ...parent::share($request),
@@ -90,5 +79,53 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => csrf_token(),
         ];
+    }
+
+    /**
+     * @return list<array{
+     *     id: string,
+     *     name: string,
+     *     applications: list<array{
+     *         id: string,
+     *         name: string,
+     *         environments: list<array{id: string, name: string}>
+     *     }>
+     * }>
+     */
+    private function switcher(User $user): array
+    {
+        return $user->organizations()
+            ->with([
+                'applications' => fn ($query) => $query->orderBy('name'),
+                'applications.environments' => fn ($query) => $query->orderBy('name'),
+            ])
+            ->orderBy('name')
+            ->get()
+            ->map(function (Organization $organization) {
+                $applications = $organization->applications
+                    ->map(fn (Application $application) => [
+                        'id' => $application->id,
+                        'name' => $application->name,
+                        'environments' => $application->environments
+                            ->map(fn (Environment $environment) => [
+                                'id' => $environment->id,
+                                'name' => $environment->name,
+                            ])
+                            ->values()
+                            ->all(),
+                    ])
+                    ->filter(fn (array $application) => $application['environments'] !== [])
+                    ->values()
+                    ->all();
+
+                return [
+                    'id' => $organization->id,
+                    'name' => $organization->name,
+                    'applications' => $applications,
+                ];
+            })
+            ->filter(fn (array $organization) => $organization['applications'] !== [])
+            ->values()
+            ->all();
     }
 }

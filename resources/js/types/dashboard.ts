@@ -55,6 +55,25 @@ export type DashboardEvent = {
     payload?: Record<string, unknown>;
 };
 
+export type ExceptionFrame = {
+    file: string | null;
+    source: string | null;
+    code: Record<string, string> | null;
+};
+
+export type ExceptionDetail = {
+    code: string | null;
+    php_version: string | null;
+    laravel_version: string | null;
+    execution_source: string | null;
+    user: string | null;
+    server: string | null;
+    deploy: string | null;
+    trace_id: string | null;
+    occurred_at_label: string;
+    frames: ExceptionFrame[];
+};
+
 export type DashboardIssue = {
     id: number;
     class: string;

@@ -21,8 +21,18 @@ export type SharedEnvironment = {
 export type SwitcherEnvironment = {
     id: string;
     name: string;
-    application: string;
-    organization: string;
+};
+
+export type SwitcherApplication = {
+    id: string;
+    name: string;
+    environments: SwitcherEnvironment[];
+};
+
+export type SwitcherOrganization = {
+    id: string;
+    name: string;
+    applications: SwitcherApplication[];
 };
 
 declare module 'react' {
@@ -46,7 +56,7 @@ declare module '@inertiajs/core' {
             currentApplication: SharedApplication | null;
             currentEnvironment: SharedEnvironment | null;
             isOwner: boolean;
-            switcher: SwitcherEnvironment[];
+            switcher: SwitcherOrganization[];
             flash: {
                 success: string | null;
             };

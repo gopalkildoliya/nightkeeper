@@ -92,6 +92,45 @@ export default function OrganizationShow({
                     </div>
                 ) : null}
 
+                {is_owner ? (
+                    <Card className="bg-card border-border shadow-sm">
+                        <CardHeader className="pb-3 border-b border-border/60">
+                            <CardTitle className="text-sm font-semibold">Organisation name</CardTitle>
+                            <CardDescription>Display name for this organisation. The slug used in URLs does not change.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-5">
+                            <Form
+                                action={`/organizations/${organization.id}`}
+                                method="patch"
+                                className="flex max-w-md items-start gap-2"
+                            >
+                                {({ processing, errors }) => (
+                                    <>
+                                        <CsrfField />
+                                        <div className="grid flex-1 gap-1">
+                                            <Label htmlFor="organization-name" className="text-xs font-medium">
+                                                Name
+                                            </Label>
+                                            <Input
+                                                id="organization-name"
+                                                name="name"
+                                                defaultValue={organization.name}
+                                                required
+                                                maxLength={255}
+                                                className="h-9 text-xs"
+                                            />
+                                            <InputError message={errors.name} />
+                                        </div>
+                                        <Button type="submit" size="sm" disabled={processing} className="h-9 mt-[21px]">
+                                            Save Name
+                                        </Button>
+                                    </>
+                                )}
+                            </Form>
+                        </CardContent>
+                    </Card>
+                ) : null}
+
                 {/* Team Members Section */}
                 <Card className="bg-card border-border shadow-sm">
                     <CardHeader className="border-b border-border/60">
@@ -243,6 +282,36 @@ export default function OrganizationShow({
                                 </div>
                             </CardHeader>
                             <CardContent className="p-5 space-y-4">
+                                {is_owner ? (
+                                    <Form
+                                        action={`/organizations/${organization.id}/applications/${application.id}`}
+                                        method="patch"
+                                        className="flex max-w-md items-start gap-2"
+                                    >
+                                        {({ processing, errors }) => (
+                                            <>
+                                                <CsrfField />
+                                                <div className="grid flex-1 gap-1">
+                                                    <Label htmlFor={`application-name-${application.id}`} className="text-xs font-medium">
+                                                        Application name
+                                                    </Label>
+                                                    <Input
+                                                        id={`application-name-${application.id}`}
+                                                        name="name"
+                                                        defaultValue={application.name}
+                                                        required
+                                                        maxLength={255}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                    <InputError message={errors.name} />
+                                                </div>
+                                                <Button type="submit" size="sm" disabled={processing} className="h-9 mt-[21px]">
+                                                    Save Name
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Form>
+                                ) : null}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                     {application.environments.map((environment) => (
                                         <div

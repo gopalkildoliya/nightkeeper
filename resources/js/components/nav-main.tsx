@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Fragment } from 'react';
 import { Badge } from '@/components/ui/badge';
 import {
     SidebarGroup,
@@ -6,6 +7,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { hrefPath } from '@/lib/range';
@@ -26,26 +28,31 @@ export function NavMain({ items }: { items: NavItem[] }) {
                         : isCurrentOrParentUrl(path);
 
                     return (
-                        <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={active}
-                                tooltip={{ children: item.title }}
-                            >
-                                <Link href={item.href} prefetch>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                    {item.badge ? (
-                                        <Badge
-                                            variant="destructive"
-                                            className="ml-auto h-5 min-w-5 px-1.5"
-                                        >
-                                            {item.badge}
-                                        </Badge>
-                                    ) : null}
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        <Fragment key={item.title}>
+                            {item.hasSeparator && (
+                                <SidebarSeparator className="my-1.5" />
+                            )}
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={active}
+                                    tooltip={{ children: item.title }}
+                                >
+                                    <Link href={item.href} prefetch>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                        {item.badge ? (
+                                            <Badge
+                                                variant="destructive"
+                                                className="ml-auto h-5 min-w-5 px-1.5"
+                                            >
+                                                {item.badge}
+                                            </Badge>
+                                        ) : null}
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </Fragment>
                     );
                 })}
             </SidebarMenu>
