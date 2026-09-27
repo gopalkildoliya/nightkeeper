@@ -17,6 +17,10 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
     const isCommandLike = events.some((event) =>
         ['command', 'scheduled-task'].includes(event.t),
     );
+    // Detail pages list occurrences of a single event type, so the type
+    // column would repeat the same badge on every row. Only show it when
+    // the events actually differ (e.g. a mixed trace timeline).
+    const hasMixedTypes = new Set(events.map((event) => event.t)).size > 1;
 
     if (events.length === 0) {
         return (
@@ -29,7 +33,7 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
     return (
         <DataTable>
             <TableHead>
-                <Th>Type</Th>
+                {hasMixedTypes ? <Th>Type</Th> : null}
                 <Th>Summary & Trace Endpoint</Th>
                 <Th>Status</Th>
                 <Th>Duration</Th>
@@ -51,9 +55,11 @@ export function EventTable({ events }: { events: DashboardEvent[] }) {
 
                     return (
                         <tr key={event.id} className="hover:bg-muted/40 transition-colors">
-                            <Td>
-                                <EventBadge type={event.t} />
-                            </Td>
+                            {hasMixedTypes ? (
+                                <Td>
+                                    <EventBadge type={event.t} />
+                                </Td>
+                            ) : null}
                             <Td className="font-mono">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">

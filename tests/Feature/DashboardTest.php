@@ -6,6 +6,7 @@ use App\Models\Environment;
 use App\Models\NightwatchEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -35,6 +36,38 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('dashboard/trace')
                 ->where('parent.title', 'GET /deals')
+            );
+    }
+
+    public function test_trace_page_limits_the_number_of_spans_rendered(): void
+    {
+        [, $environment] = $this->actingAsOwner();
+        $traceId = (string) Str::uuid();
+        $start = (float) now()->getTimestamp();
+
+        NightwatchEvent::factory()->recycle($environment)->request('/deals')->create([
+            'trace_id' => $traceId,
+            'occurred_at' => $start,
+        ]);
+
+        NightwatchEvent::factory()
+            ->recycle($environment)
+            ->query()
+            ->count(150)
+            ->sequence(fn ($sequence) => [
+                'trace_id' => $traceId,
+                'occurred_at' => $start + ($sequence->index + 1) / 1000,
+            ])
+            ->create();
+
+        $this->get(route('traces.show', [$environment, $traceId]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard/trace')
+                ->where('event_count', 151)
+                ->where('span_limit', 100)
+                // The request factory captures all 7 stage timings, which each become
+                // their own pseudo-span alongside the (capped) 100 fetched event spans.
+                ->has('spans', 107)
             );
     }
 

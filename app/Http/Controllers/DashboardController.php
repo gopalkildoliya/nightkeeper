@@ -140,13 +140,21 @@ class DashboardController extends Controller
 
     public function trace(Environment $environment, string $traceId): Response
     {
+        $spanLimit = 100;
+
+        $eventCount = NightwatchEvent::query()
+            ->forEnvironment($environment)
+            ->where('trace_id', $traceId)
+            ->count();
+
+        abort_if($eventCount === 0, 404);
+
         $events = NightwatchEvent::query()
             ->forEnvironment($environment)
             ->where('trace_id', $traceId)
             ->orderBy('occurred_at')
+            ->limit($spanLimit)
             ->get();
-
-        abort_if($events->isEmpty(), 404);
 
         $parent = $events->first(fn (NightwatchEvent $event) => in_array($event->t, ['request', 'command', 'scheduled-task', 'job-attempt'], true))
             ?? $events->first();
@@ -158,7 +166,8 @@ class DashboardController extends Controller
 
         return Inertia::render('dashboard/trace', [
             'traceId' => $traceId,
-            'event_count' => $events->count(),
+            'event_count' => $eventCount,
+            'span_limit' => $spanLimit,
             'parent' => $parent->toDashboardArray(includePayload: true),
             'spans' => collect($spans)->map(function (array $item) use ($start, $window) {
                 return [

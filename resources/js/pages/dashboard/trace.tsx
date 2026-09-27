@@ -4,11 +4,12 @@ import { cn } from '@/lib/utils';
 import type { DashboardEvent, TraceSpan } from '@/types/dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Layers, Server, Code } from 'lucide-react';
+import { AlertTriangle, Clock, Layers, Server, Code } from 'lucide-react';
 
 type TraceProps = {
     traceId: string;
     event_count: number;
+    span_limit: number;
     parent: DashboardEvent;
     spans: TraceSpan[];
 };
@@ -27,9 +28,12 @@ const barClass: Record<string, string> = {
 export default function Trace({
     traceId,
     event_count,
+    span_limit,
     parent,
     spans,
 }: TraceProps) {
+    const isTruncated = event_count > span_limit;
+
     return (
         <>
             <Head title={`Trace: ${parent.title}`} />
@@ -66,6 +70,15 @@ export default function Trace({
                 </div>
 
                 {/* Spans Waterfall Card */}
+                {isTruncated ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-medium text-amber-700 dark:text-amber-400">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+                        <span>
+                            Showing the first {span_limit.toLocaleString()} of {event_count.toLocaleString()} spans in this trace.
+                            The remaining spans are omitted here to keep the timeline responsive.
+                        </span>
+                    </div>
+                ) : null}
                 <Card className="bg-card border-border shadow-sm">
                     <CardHeader className="border-b border-border/80">
                         <CardTitle className="text-sm font-semibold flex items-center gap-2">
