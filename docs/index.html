@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Nightkeeper — a self-hosted Laravel Nightwatch cloud</title>
+    <meta name="description" content="Nightkeeper is a self-hosted implementation of Laravel Nightwatch's cloud dashboard. Keep the official agent, own your telemetry.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Nightkeeper — a self-hosted Laravel Nightwatch cloud">
+    <meta property="og:description" content="Keep the official nightwatch:agent. Point it at a server you control instead of a hosted dashboard.">
+    <meta name="twitter:card" content="summary">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%230b0f1a'/%3E%3Cpath d='M15.5 4.5a8 8 0 1 0 4 8 6.2 6.2 0 0 1-4-8Z' fill='%236366f1'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav">
+            <a class="brand" href="#top">
+                <span class="brand-mark" aria-hidden="true"></span>
+                Nightkeeper
+            </a>
+            <nav class="site-nav">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#quick-start">Quick start</a>
+                <a href="https://github.com/gopalkildoliya/nightkeeper" class="nav-cta">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="top">
+            <div class="container">
+                <p class="eyebrow">Self-hosted · Laravel · Open source</p>
+                <h1>Your own Nightwatch cloud.</h1>
+                <p class="lede">
+                    Nightkeeper is a self-hosted implementation of
+                    <a href="https://nightwatch.laravel.com" target="_blank" rel="noopener">Laravel Nightwatch</a>'s
+                    cloud dashboard. Keep the official <code>nightwatch:agent</code> exactly as it ships —
+                    just point it at a server you control instead of a hosted one.
+                </p>
+                <div class="cta-row">
+                    <a class="btn btn-primary" href="https://github.com/gopalkildoliya/nightkeeper">View on GitHub</a>
+                    <a class="btn btn-ghost" href="#quick-start">Quick start →</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="what-is-this">
+            <div class="container narrow">
+                <h2>What is this?</h2>
+                <p>
+                    Nightwatch's local agent streams request, query, exception, job, and command telemetry from
+                    your app to a hosted dashboard over a small HTTP contract — nothing about that contract is
+                    tied to Laravel's own servers. Nightkeeper re-implements just that half: it authenticates the
+                    agent, accepts its ingest batches, and renders the same categories of data your monitored app
+                    already produces. No telemetry leaves infrastructure you control, and there's no recurring
+                    bill for the privilege of seeing your own exceptions.
+                </p>
+            </div>
+        </section>
+
+        <section class="section" id="features">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="grid">
+                    <article class="card">
+                        <h3>Multi-tenant by design</h3>
+                        <p>Organizations → Applications → Environments. Each environment gets its own rotatable ingest token.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Full event coverage</h3>
+                        <p>Requests, queries, exceptions, commands, scheduled tasks, jobs, outgoing requests, cache, mail, and notifications — grouped and aggregated.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Request waterfalls</h3>
+                        <p>Every trace reconstructed span-by-span, from bootstrap through termination, for a single request or job.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Sentry-style issue tracking</h3>
+                        <p>Unhandled exceptions grouped by class, file, and line — occurrence counts, affected users, real stack traces with source context, open/close workflow.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Signed ingest auth</h3>
+                        <p>Short-lived HMAC-signed JWTs issued per environment. Rotate a token without touching any other environment.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Nothing exotic</h3>
+                        <p>Laravel, Inertia, React, Tailwind. Self-host it with a stack you're probably already running.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section alt" id="how-it-works">
+            <div class="container narrow">
+                <h2>How it works</h2>
+                <ol class="steps">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div>
+                            <h3>The agent authenticates</h3>
+                            <p><code>POST /api/agent-auth</code> with the environment's ingest token returns a short-lived signed JWT.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div>
+                            <h3>It streams telemetry</h3>
+                            <p>Gzip'd JSON batches of request, query, exception, and job records are POSTed to <code>/api/ingest</code>.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div>
+                            <h3>Nightkeeper indexes and shows it</h3>
+                            <p>Events are grouped, aggregated, and rendered across the same dashboards a hosted product would give you.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section" id="quick-start">
+            <div class="container narrow">
+                <h2>Quick start</h2>
+                <p>Run Nightkeeper itself:</p>
+                <pre><code>composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve</code></pre>
+                <p>Dashboard is now at <code>http://127.0.0.1:8000</code>. Point a Nightwatch agent at it:</p>
+                <pre><code>NIGHTWATCH_BASE_URL=http://127.0.0.1:8000
+NIGHTWATCH_TOKEN=&lt;your environment's ingest token&gt;</code></pre>
+                <p>Full setup, including production notes, lives in the <a href="https://github.com/gopalkildoliya/nightkeeper#readme">README</a>.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>Built on Laravel, Inertia, and React. <a href="https://github.com/gopalkildoliya/nightkeeper">Source on GitHub</a>.</p>
+        </div>
+    </footer>
+</body>
+</html>
