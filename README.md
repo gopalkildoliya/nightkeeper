@@ -2,6 +2,8 @@
 
 Self-hosted replacement for Laravel Nightwatch’s cloud. Keep `php artisan nightwatch:agent` on your app; point it here with `NIGHTWATCH_BASE_URL`.
 
+![Nightkeeper dashboard](docs/dashboard.png)
+
 ## Laravel cloud (this directory)
 
 ```bash

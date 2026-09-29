@@ -204,6 +204,33 @@ h1, h2, h3 {
     color: var(--accent);
 }
 
+/* Screenshot */
+
+.screenshot-section {
+    padding-top: 0;
+}
+
+.screenshot {
+    display: block;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.65);
+}
+
+.screenshot img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.screenshot-caption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin: 14px 0 0;
+}
+
 /* Sections */
 
 .section {
